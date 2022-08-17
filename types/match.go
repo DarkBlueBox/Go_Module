@@ -1,6 +1,10 @@
 package types
 
-import "github.com/heroiclabs/nakama-common/runtime"
+import (
+	"matchmod/config"
+
+	"github.com/heroiclabs/nakama-common/runtime"
+)
 
 const (
 	MatchStatusNotStarted = 0
@@ -11,6 +15,7 @@ const (
 type MatchState struct {
 	Presences      map[string]runtime.Presence
 	Label          *MatchLabel
+	Lobby          config.Lobby
 	EmptyTicks     int
 	Status         int
 	Playing        bool

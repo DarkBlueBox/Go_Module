@@ -9,7 +9,6 @@ ScriptsOnlyBuild:
     - UnityEditor.U2D.Animation.BoneGizmo
     Unity.2D.IK.Editor.dll:
     - UnityEditor.U2D.IK.IKEditorManager
-    - UnityEditor.U2D.IK.IKGizmos
     Unity.2D.Tilemap.Editor.dll:
     - UnityEditor.Tilemaps.GridBrush
     - UnityEditor.Tilemaps.GridPaintingState
@@ -82,6 +81,12 @@ ScriptsOnlyBuild:
     methodName: FindMatch
   - assembly: Assembly-CSharp
     fullTypeName: MainMenu
+    methodName: CancelMatchMaking
+  - assembly: Assembly-CSharp
+    fullTypeName: MainMenu
+    methodName: LeaveMatch
+  - assembly: Assembly-CSharp
+    fullTypeName: MainMenu
     methodName: HelloWorld
   sceneClasses:
     Assets/Scenes/SampleScene.unity:
@@ -104,35 +109,35 @@ ScriptsOnlyBuild:
     - Class: 104
       Script: {instanceID: 0}
     - Class: 114
-      Script: {instanceID: 1626}
+      Script: {instanceID: 1624}
     - Class: 114
-      Script: {instanceID: 2350}
+      Script: {instanceID: 2348}
     - Class: 114
-      Script: {instanceID: 2860}
+      Script: {instanceID: 2858}
     - Class: 114
-      Script: {instanceID: 3120}
+      Script: {instanceID: 3118}
     - Class: 114
-      Script: {instanceID: 3480}
+      Script: {instanceID: 3478}
     - Class: 114
-      Script: {instanceID: 3664}
+      Script: {instanceID: 3662}
     - Class: 114
-      Script: {instanceID: 4764}
+      Script: {instanceID: 4762}
+    - Class: 114
+      Script: {instanceID: 5094}
     - Class: 114
       Script: {instanceID: 5096}
     - Class: 114
-      Script: {instanceID: 5098}
+      Script: {instanceID: 6012}
     - Class: 114
-      Script: {instanceID: 6014}
+      Script: {instanceID: 6756}
     - Class: 114
-      Script: {instanceID: 6758}
+      Script: {instanceID: 6958}
     - Class: 114
-      Script: {instanceID: 6960}
+      Script: {instanceID: 7380}
     - Class: 114
-      Script: {instanceID: 7382}
+      Script: {instanceID: 8018}
     - Class: 114
-      Script: {instanceID: 8020}
-    - Class: 114
-      Script: {instanceID: 8034}
+      Script: {instanceID: 8032}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128

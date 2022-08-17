@@ -4,17 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"matchmod/api"
+	"matchmod/config"
 	"matchmod/types"
 
 	"github.com/heroiclabs/nakama-common/runtime"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const newMatchOpCode = 999
 
 type MatchHandler struct {
-	Marshaler   *protojson.MarshalOptions
-	Unmarshaler *protojson.UnmarshalOptions
+	api    []api.MatchInterface
+	config config.Config
 }
 
 var _matchMap = map[string]types.MatchState{}
@@ -47,17 +48,18 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	state := &types.MatchState{
 		EmptyTicks: 0,
 		Label:      label,
+		Lobby:      config.CreateLobby(&m.config),
 		Presences:  map[string]runtime.Presence{},
 		Status:     types.MatchStatusNotStarted,
 	}
 
 	return state, tickRate, string(labelJSON)
 }
-func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presence runtime.Presence, metadata map[string]string) (interface{}, bool, string) {
+func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presences runtime.Presence, metadata map[string]string) (interface{}, bool, string) {
 	result := true
 	matchState := state.(*types.MatchState)
 
-	if presence, ok := matchState.Presences[presence.GetUserId()]; ok {
+	if presence, ok := matchState.Presences[presences.GetUserId()]; ok {
 		if presence == nil {
 			matchState.JoinInProgress++
 			return matchState, true, ""
@@ -84,7 +86,13 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 		matchState.EmptyTicks = 0
 		matchState.Presences[presence.GetUserId()] = presence
 		matchState.Presences[presence.GetSessionId()] = presence
-		matchState.JoinInProgress--
+
+		if matchState.Lobby.Players[presence.GetUserId()] == nil {
+			matchState.Lobby.AddPlayer(presence.GetUserId(), &m.config)
+		}
+		player := matchState.Lobby.Players[presence.GetUserId()]
+		data, _ := json.Marshal(player)
+		dispatcher.BroadcastMessage(types.PlayerJoined, data, nil, nil, true)
 
 		if len(matchState.Presences) >= 2 && matchState.Label.Open != 0 {
 			matchState.Label.Open = 0
@@ -96,6 +104,7 @@ func (m *MatchHandler) MatchJoin(ctx context.Context, logger runtime.Logger, db 
 				}
 			}
 		}
+
 		data, err := json.Marshal(matchState)
 		if err != nil {
 			logger.Error("Could not json.Marshal the state.")
@@ -130,14 +139,21 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 	matchState, ok := state.(*types.MatchState)
 	if !ok {
 		logger.Error("state not a valid lobby state object")
-	}
+	} else {
+		if len(matchState.Presences) >= 2 && matchState.Label.Open != 0 {
+			matchState.Label.Open = 0
+			if labelJSON, err := json.Marshal(matchState.Label); err != nil {
+				logger.Error("error encoding label: %v", err)
+			} else {
+				if err := dispatcher.MatchLabelUpdate(string(labelJSON)); err != nil {
+					logger.Error("error updating label: %v", err)
+				}
+			}
+		}
+		for _, api := range m.api {
+			api.Update(ctx, logger, db, nk, dispatcher, tick, matchState, messages)
+		}
 
-	if len(matchState.Presences) == 0 {
-		matchState.EmptyTicks++
-	}
-
-	if matchState.EmptyTicks > 100 {
-		return nil
 	}
 
 	return matchState
